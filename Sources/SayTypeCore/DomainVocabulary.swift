@@ -17,22 +17,18 @@ public struct DomainVocabulary: Codable, Equatable, Sendable {
             case hints
             case replacements = "replace"
         }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            text = try container.decode(String.self, forKey: .text)
+            hints = try container.decodeIfPresent([String].self, forKey: .hints) ?? []
+            replacements = try container.decodeIfPresent([String].self, forKey: .replacements) ?? []
+        }
     }
 
     public static let maximumRecognitionHints = 100
 
-    public static let builtIn = DomainVocabulary(terms: [
-        Term(
-            text: "traderops",
-            hints: ["traderops", "trader ops"],
-            replacements: ["trade the rocks", "trade rocks", "trader ops"]
-        ),
-        Term(
-            text: "CLI",
-            hints: ["CLI", "C L I", "command line interface"],
-            replacements: ["lie", "see el eye", "sea ell eye", "C L I"]
-        ),
-    ])
+    public static let builtIn = DomainVocabulary()
 
     public var terms: [Term]
 

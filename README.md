@@ -41,7 +41,7 @@ SayType loads domain terminology from:
 ~/Library/Application Support/SayType/dictionary.json
 ```
 
-If the file does not exist, SayType creates it with `traderops` and `CLI`. `hints` are passed to Apple's speech recognizer as short contextual phrases, and `replace` entries are exact phrase rewrites applied before the transcript is pasted. Edits are picked up at the start of the next dictation session.
+If the file does not exist, SayType creates an empty local dictionary. `hints` are passed to Apple's speech recognizer as short contextual phrases, and optional `replace` entries are exact phrase rewrites applied before the transcript is pasted. Edits are picked up at the start of the next dictation session.
 
 ## Signing
 

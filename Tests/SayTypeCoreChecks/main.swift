@@ -6,9 +6,9 @@ struct SayTypeCoreChecks {
     static func main() {
         checkTranscriptAssemblerReplacesVolatileTextUntilFinalized()
         checkTranscriptAssemblerKeepsFinalSegmentsAndCurrentVolatileTail()
-        checkDomainVocabularyProvidesBuiltInHints()
+        checkDomainVocabularyHasNoPublicBuiltInTerms()
         checkDomainVocabularyRewritesConfiguredPhrases()
-        checkDomainVocabularyUsesReplaceJSONKey()
+        checkDomainVocabularyDecodesLocalJSONDefaults()
         checkSayTypeStatesExposeHumanStatusText()
         checkHotKeyToggleStartsFromIdleWithFeedback()
         checkHotKeyToggleStopsWhileRecording()
@@ -44,34 +44,30 @@ struct SayTypeCoreChecks {
         expect(assembler.text == "hello world from say type")
     }
 
-    private static func checkDomainVocabularyProvidesBuiltInHints() {
-        let hints = DomainVocabulary.builtIn.recognitionHints
+    private static func checkDomainVocabularyHasNoPublicBuiltInTerms() {
+        let vocabulary = DomainVocabulary.builtIn
 
-        expect(hints.contains("traderops"))
-        expect(hints.contains("CLI"))
-        expect(hints.count <= DomainVocabulary.maximumRecognitionHints)
+        expect(vocabulary.terms.isEmpty)
+        expect(vocabulary.recognitionHints.isEmpty)
     }
 
     private static func checkDomainVocabularyRewritesConfiguredPhrases() {
         let vocabulary = DomainVocabulary(terms: [
-            DomainVocabulary.Term(text: "traderops", replacements: ["trade the rocks"]),
-            DomainVocabulary.Term(text: "CLI", replacements: ["lie", "see el eye"]),
+            DomainVocabulary.Term(text: "ProjectTerm", replacements: ["project term"]),
+            DomainVocabulary.Term(text: "ABC", replacements: ["a b c"]),
         ])
 
-        expect(vocabulary.rewrite("ship trade the rocks.") == "ship traderops.")
-        expect(vocabulary.rewrite("open see el eye") == "open CLI")
-        expect(vocabulary.rewrite("open the lie") == "open the CLI")
-        expect(vocabulary.rewrite("pretrade the rocks should stay") == "pretrade the rocks should stay")
+        expect(vocabulary.rewrite("ship project term.") == "ship ProjectTerm.")
+        expect(vocabulary.rewrite("open a b c") == "open ABC")
+        expect(vocabulary.rewrite("preproject term should stay") == "preproject term should stay")
     }
 
-    private static func checkDomainVocabularyUsesReplaceJSONKey() {
+    private static func checkDomainVocabularyDecodesLocalJSONDefaults() {
         let data = """
         {
           "terms": [
             {
-              "text": "CLI",
-              "hints": ["C L I"],
-              "replace": ["see el eye"]
+              "text": "ProjectTerm"
             }
           ]
         }
@@ -80,7 +76,8 @@ struct SayTypeCoreChecks {
         let vocabulary = try! JSONDecoder().decode(DomainVocabulary.self, from: data)
         let encoded = String(data: try! JSONEncoder().encode(vocabulary), encoding: .utf8)!
 
-        expect(vocabulary.terms.first?.replacements == ["see el eye"])
+        expect(vocabulary.terms.first?.hints == [])
+        expect(vocabulary.terms.first?.replacements == [])
         expect(encoded.contains("\"replace\""))
     }
 
