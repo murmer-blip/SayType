@@ -18,6 +18,19 @@ scripts/install-dev.sh
 
 `scripts/install-dev.sh` installs and opens the app at `~/Applications/SayType.app` by default. Use `SAYTYPE_DEV_APP=/path/to/SayType.app` to choose a different stable dev path.
 
+To also start SayType automatically when you log in:
+
+```bash
+SAYTYPE_INSTALL_LOGIN_ITEM=1 scripts/install-dev.sh
+```
+
+This installs a per-user LaunchAgent at `~/Library/LaunchAgents/com.matthewowusu.saytype.login.plist`. You can inspect or remove it with:
+
+```bash
+scripts/install-login-item.sh --status
+scripts/install-login-item.sh --uninstall
+```
+
 On first launch, grant Microphone, Speech Recognition, and Accessibility. Accessibility is needed so SayType can observe `Option+Space` globally and post `Command+V` after copying the transcript.
 
 ## Signing
