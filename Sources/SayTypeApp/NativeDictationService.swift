@@ -32,16 +32,18 @@ final class NativeDictationService {
     private var analysisTask: Task<Void, Error>?
     private var resultsTask: Task<Void, Never>?
     private var assembler = TranscriptAssembler()
+    private var vocabulary = DomainVocabulary.builtIn
     private var partialHandler: ((String) -> Void)?
 
     var currentText: String {
-        assembler.text
+        vocabulary.rewrite(assembler.text)
     }
 
     func start(partial: @escaping (String) -> Void) async throws {
         await cancel()
         partialHandler = partial
         assembler.reset()
+        vocabulary = VocabularyStore.load()
 
         let locale = await preferredLocale()
         let transcriber = DictationTranscriber(locale: locale, preset: .progressiveLongDictation)
@@ -66,6 +68,7 @@ final class NativeDictationService {
             options: SpeechAnalyzer.Options(priority: .userInitiated, modelRetention: .processLifetime)
         )
         try await analyzer.prepareToAnalyze(in: analyzerFormat)
+        await applyVocabularyContext(to: analyzer)
 
         let analyzerInput = AnalyzerInputStream.make(bufferingNewest: 32)
         continuation = analyzerInput.continuation
@@ -75,10 +78,10 @@ final class NativeDictationService {
             do {
                 for try await result in transcriber.results {
                     self?.assembler.accept(text: String(result.text.characters), isFinal: result.isFinal)
-                    self?.partialHandler?(self?.assembler.text ?? "")
+                    self?.partialHandler?(self?.currentText ?? "")
                 }
             } catch {
-                self?.partialHandler?(self?.assembler.text ?? "")
+                self?.partialHandler?(self?.currentText ?? "")
             }
         }
 
@@ -107,7 +110,7 @@ final class NativeDictationService {
         try await analysisTask?.value
         resultsTask?.cancel()
 
-        let text = assembler.text
+        let text = currentText
         clearSession()
         return text
     }
@@ -130,6 +133,20 @@ final class NativeDictationService {
         analysisTask = nil
         resultsTask = nil
         partialHandler = nil
+    }
+
+    private func applyVocabularyContext(to analyzer: SpeechAnalyzer) async {
+        let hints = vocabulary.recognitionHints
+        guard !hints.isEmpty else { return }
+
+        let context = AnalysisContext()
+        context.contextualStrings[.general] = hints
+        do {
+            try await analyzer.setContext(context)
+            AppLog.write("applied domain vocabulary hints=\(hints.count)")
+        } catch {
+            AppLog.write("domain vocabulary context failed: \(error.localizedDescription)")
+        }
     }
 
     private func preferredLocale() async -> Locale {

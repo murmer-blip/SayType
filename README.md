@@ -33,6 +33,16 @@ scripts/install-login-item.sh --uninstall
 
 On first launch, grant Microphone, Speech Recognition, and Accessibility. Accessibility is needed so SayType can observe `Option+Space` globally and post `Command+V` after copying the transcript.
 
+## Domain vocabulary
+
+SayType loads domain terminology from:
+
+```text
+~/Library/Application Support/SayType/dictionary.json
+```
+
+If the file does not exist, SayType creates it with `traderops` and `CLI`. `hints` are passed to Apple's speech recognizer as short contextual phrases, and `replace` entries are exact phrase rewrites applied before the transcript is pasted. Edits are picked up at the start of the next dictation session.
+
 ## Signing
 
 macOS Accessibility trust is tied to the app's code identity. The build script auto-detects a real codesigning identity, preferring `Apple Development`, then `Developer ID Application`, then any valid codesigning identity.
