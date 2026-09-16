@@ -6,6 +6,7 @@ Tiny macOS menu-bar dictation app using Apple native on-device speech.
 
 - Hotkey: `Option+Space`
 - Press once to record, press again to finish and paste.
+- Dictation temporarily uses the clipboard, then restores its previous contents after a short delay. Any newer copy you make is preserved. Apps that take longer than half a second to read a paste may need you to dictate again.
 - Uses macOS 26 `SpeechAnalyzer` + `DictationTranscriber`.
 - The menu-bar icon changes color and symbol for ready, hotkey, preparing, recording, finishing, pasting, finished, and error states.
 
